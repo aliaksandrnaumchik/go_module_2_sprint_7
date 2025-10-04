@@ -63,12 +63,18 @@ func TestCafeCount(t *testing.T) {
 		{0, 0},
 		{1, 1},
 		{2, 2},
-		{100, len(cafeList["moscow"])},
+		{5, 5},
+		{10, 5},
+		{100, 5},
 	}
 
 	for _, test := range requests {
-		url := fmt.Sprintf("/cafe?city=moscow&count=%d", test.count)
+		if test.count < 0 {
+			t.Skip("Пропускаем отрицательные значения count")
+			continue
+		}
 
+		url := fmt.Sprintf("/cafe?city=moscow&count=%d", test.count)
 		response := httptest.NewRecorder()
 		req := httptest.NewRequest(testRequestTypeGet, url, nil)
 		handler.ServeHTTP(response, req)
@@ -83,6 +89,10 @@ func TestCafeCount(t *testing.T) {
 		}
 
 		assert.Equal(t, test.want, len(cafes))
+
+		for i := 0; i < len(cafes) && i < len(cafeList["moscow"]); i++ {
+			assert.Equal(t, cafeList["moscow"][i], cafes[i])
+		}
 	}
 }
 
@@ -94,11 +104,15 @@ func TestCafeSearch(t *testing.T) {
 		wantCount int
 		wantNames []string
 	}{
+		{"", 5, cafeList["moscow"]},
 		{"фасоль", 0, []string{}},
 		{"кофе", 2, []string{"Мир кофе", "Кофе и завтраки"}},
 		{"вилка", 1, []string{"Ложка и вилка"}},
 		{"КОФЕ", 2, []string{"Мир кофе", "Кофе и завтраки"}},
 		{"завтра", 1, []string{"Кофе и завтраки"}},
+		{"и", 4, []string{"Мир кофе", "Кофе и завтраки", "Сытый студент", "Ложка и вилка"}},
+		{"слад", 1, []string{"Сладкоежка"}},
+		{"студент", 1, []string{"Сытый студент"}},
 	}
 
 	for _, test := range requests {
@@ -113,7 +127,7 @@ func TestCafeSearch(t *testing.T) {
 		cafes := strings.Split(body, ",")
 
 		if body == "" {
-			cafes := []string{}
+			cafes = []string{}
 			assert.Equal(t, test.wantCount, len(cafes))
 			return
 		}
@@ -122,7 +136,7 @@ func TestCafeSearch(t *testing.T) {
 
 		for _, name := range cafes {
 			assert.Contains(t, test.wantNames, name)
-			assert.True(t, strings.Contains(strings.ToLower(name), strings.ToLower(test.search)), "Название не содержит искомую строку")
+			assert.True(t, strings.Contains(strings.ToLower(name), strings.ToLower(test.search)))
 		}
 	}
 }

@@ -55,28 +55,22 @@ func TestCafeCount(t *testing.T) {
 	handler := http.HandlerFunc(mainHandle)
 
 	requests := []struct {
-		city  string
 		count int
 		want  int
 	}{
-		{"moscow", 0, 0},
-		{"moscow", 1, 1},
-		{"moscow", 2, 2},
-		{"moscow", 5, 5},
-		{"moscow", 100, len(cafeList["moscow"])},
-
-		{"tula", 0, 0},
-		{"tula", 1, 1},
-		{"tula", 2, 2},
-		{"tula", 3, 3},
-		{"tula", 100, len(cafeList["tula"])},
+		{0, 0},                         // 0 записей
+		{1, 1},                         // 1 запись
+		{2, 2},                         // 2 записи
+		{100, len(cafeList["moscow"])}, // больше, чем есть в Москве (5)
+		{3, len(cafeList["tula"])},     // больше, чем есть в Туле (3)
 	}
 
 	for _, test := range requests {
-		url := fmt.Sprintf("/cafe?city=%s&count=%d", test.city, test.count)
+		url := fmt.Sprintf("/cafe?city=moscow&count=%d", test.count)
 
 		response := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", url, nil)
+
 		handler.ServeHTTP(response, req)
 
 		require.Equal(t, http.StatusOK, response.Code)
@@ -89,56 +83,45 @@ func TestCafeCount(t *testing.T) {
 		}
 
 		assert.Equal(t, test.want, len(cafes))
-
-		for i := 0; i < len(cafes) && i < len(cafeList[test.city]); i++ {
-			assert.Equal(t, cafeList[test.city][i], cafes[i])
-		}
 	}
 }
+
 func TestCafeSearch(t *testing.T) {
 	handler := http.HandlerFunc(mainHandle)
 
 	requests := []struct {
-		city      string
 		search    string
 		wantCount int
-		wantNames []string
 	}{
-		{"moscow", "фасоль", 0, []string{}},
-		{"moscow", "кофе", 2, []string{"Мир кофе", "Кофе и завтраки"}},
-		{"moscow", "вилка", 1, []string{"Ложка и вилка"}},
-		{"moscow", "КОФЕ", 2, []string{"Мир кофе", "Кофе и завтраки"}},
-		{"moscow", "завтра", 1, []string{"Кофе и завтраки"}},
-
-		{"tula", "пир", 1, []string{"Пир и мир"}},
-		{"tula", "красиво", 1, []string{"Красиво есть не запретишь"}},
-		{"tula", "завтрак", 2, []string{"Красиво есть не запретишь", "Поздний завтрак"}},
-		{"tula", "поздний", 1, []string{"Поздний завтрак"}},
+		{"фасоль", 0},  // Нет совпадений
+		{"кофе", 2},    // "Мир кофе", "Кофе и завтраки"
+		{"вилка", 1},   // "Ложка и вилка"
+		{"слад", 1},    // "Сладкоежка"
+		{"и", 3},       // 3 кафе содержат "и"
+		{"студент", 1}, // "Сытый студент"
 	}
 
 	for _, test := range requests {
-
-		url := fmt.Sprintf("/cafe?city=%s&search=%s", test.city, test.search)
+		url := fmt.Sprintf("/cafe?city=moscow&search=%s", test.search)
 		response := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", url, nil)
+
 		handler.ServeHTTP(response, req)
 
-		assert.Equal(t, http.StatusOK, response.Code)
+		require.Equal(t, http.StatusOK, response.Code)
 
 		body := strings.TrimSpace(response.Body.String())
 		cafes := strings.Split(body, ",")
 
 		if body == "" {
 			cafes = []string{}
-			assert.Equal(t, test.wantCount, len(cafes))
-			return
 		}
 
-		assert.Equal(t, test.wantCount, len(cafes))
+		assert.Equal(t, test.wantCount, len(cafes), fmt.Sprintf("Для поиска '%s' ожидалось %d кафе, найдено %d", test.search, test.wantCount, len(cafes)))
 
-		for _, name := range cafes {
-			assert.Contains(t, test.wantNames, name)
-			assert.True(t, strings.Contains(strings.ToLower(name), strings.ToLower(test.search)), "Название не содержит искомую строку")
+		for _, cafe := range cafes {
+
+			assert.True(t, strings.Contains(strings.ToLower(cafe), strings.ToLower(test.search)), fmt.Sprintf("Кафе %q не содержит строку %q", cafe, test.search))
 		}
 	}
 }

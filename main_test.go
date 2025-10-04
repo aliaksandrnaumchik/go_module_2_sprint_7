@@ -11,8 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testRequestTypeGet = "GET"
-
 func TestCafeNegative(t *testing.T) {
 	handler := http.HandlerFunc(mainHandle)
 
@@ -27,7 +25,7 @@ func TestCafeNegative(t *testing.T) {
 	}
 	for _, v := range requests {
 		response := httptest.NewRecorder()
-		req := httptest.NewRequest(testRequestTypeGet, v.request, nil)
+		req := httptest.NewRequest("GET", v.request, nil)
 		handler.ServeHTTP(response, req)
 
 		assert.Equal(t, v.status, response.Code)
@@ -45,7 +43,7 @@ func TestCafeWhenOk(t *testing.T) {
 	}
 	for _, v := range requests {
 		response := httptest.NewRecorder()
-		req := httptest.NewRequest(testRequestTypeGet, v, nil)
+		req := httptest.NewRequest("GET", v, nil)
 
 		handler.ServeHTTP(response, req)
 
@@ -63,20 +61,19 @@ func TestCafeCount(t *testing.T) {
 		{0, 0},
 		{1, 1},
 		{2, 2},
+		{3, 3},
+		{4, 4},
 		{5, 5},
+		{6, 5},
 		{10, 5},
 		{100, 5},
+		{25, 5},
 	}
 
 	for _, test := range requests {
-		if test.count < 0 {
-			t.Skip("Пропускаем отрицательные значения count")
-			continue
-		}
-
 		url := fmt.Sprintf("/cafe?city=moscow&count=%d", test.count)
 		response := httptest.NewRecorder()
-		req := httptest.NewRequest(testRequestTypeGet, url, nil)
+		req := httptest.NewRequest("GET", url, nil)
 		handler.ServeHTTP(response, req)
 
 		require.Equal(t, http.StatusOK, response.Code)
@@ -95,7 +92,6 @@ func TestCafeCount(t *testing.T) {
 		}
 	}
 }
-
 func TestCafeSearch(t *testing.T) {
 	handler := http.HandlerFunc(mainHandle)
 
@@ -118,7 +114,7 @@ func TestCafeSearch(t *testing.T) {
 	for _, test := range requests {
 		url := fmt.Sprintf("/cafe?city=moscow&search=%s", test.search)
 		response := httptest.NewRecorder()
-		req := httptest.NewRequest(testRequestTypeGet, url, nil)
+		req := httptest.NewRequest("GET", url, nil)
 		handler.ServeHTTP(response, req)
 
 		assert.Equal(t, http.StatusOK, response.Code)

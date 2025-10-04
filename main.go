@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -48,6 +49,9 @@ func mainHandle(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.HandleFunc(`/cafe`, mainHandle)
+
+	fmt.Println("Запуск сервера на порту 8080...")
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)

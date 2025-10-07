@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -8,8 +9,8 @@ import (
 )
 
 var cafeList = map[string][]string{
-	"moscow": []string{"Мир кофе", "Сладкоежка", "Кофе и завтраки", "Сытый студент", "Ложка и вилка"},
-	"tula":   []string{"Пир и мир", "Красиво есть не запретишь", "Поздний завтрак"},
+	"moscow": {"Мир кофе", "Сладкоежка", "Кофе и завтраки", "Сытый студент", "Ложка и вилка"},
+	"tula":   {"Пир и мир", "Красиво есть не запретишь", "Поздний завтрак"},
 }
 
 func mainHandle(w http.ResponseWriter, req *http.Request) {
@@ -48,6 +49,9 @@ func mainHandle(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.HandleFunc(`/cafe`, mainHandle)
+
+	fmt.Println("Запуск сервера на порту 8080...")
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)

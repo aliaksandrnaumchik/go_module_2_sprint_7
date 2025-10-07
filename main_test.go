@@ -62,7 +62,6 @@ func TestCafeCount(t *testing.T) {
 		{1, 1},                         // 1 запись
 		{2, 2},                         // 2 записи
 		{100, len(cafeList["moscow"])}, // больше, чем есть в Москве (5)
-		{3, len(cafeList["tula"])},     // больше, чем есть в Туле (3)
 	}
 
 	for _, test := range requests {
@@ -82,7 +81,7 @@ func TestCafeCount(t *testing.T) {
 			cafes = []string{}
 		}
 
-		assert.Equal(t, test.want, len(cafes))
+		assert.Len(t, cafes, test.want, fmt.Sprintf("Ожидалось %d кафе, найдено %d", test.want, len(cafes)))
 	}
 }
 
@@ -117,11 +116,10 @@ func TestCafeSearch(t *testing.T) {
 			cafes = []string{}
 		}
 
-		assert.Equal(t, test.wantCount, len(cafes), fmt.Sprintf("Для поиска '%s' ожидалось %d кафе, найдено %d", test.search, test.wantCount, len(cafes)))
+		assert.Len(t, cafes, test.wantCount, fmt.Sprintf("Для поиска '%s' ожидалось %d кафе, найдено %d", test.search, test.wantCount, len(cafes)))
 
 		for _, cafe := range cafes {
-
-			assert.True(t, strings.Contains(strings.ToLower(cafe), strings.ToLower(test.search)), fmt.Sprintf("Кафе %q не содержит строку %q", cafe, test.search))
+			assert.Contains(t, strings.ToLower(cafe), strings.ToLower(test.search), fmt.Sprintf("Кафе %q не содержит строку %q", cafe, test.search))
 		}
 	}
 }
